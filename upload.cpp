@@ -345,18 +345,19 @@ int main(int argc, char *argv[])
     {
         all_args.assign(argv + 1, argv + argc);
     }
-    if (all_args.size() != 3)
+    if (all_args.size() != 2)
     {
-        cout << "Invalid input, enter <chain name> <log file> <node number>\n";
+        cout << "Invalid input, enter <log file> <node number>\n";
+        return 1;
     }
     cout << all_args.size() << " args found\n";
     for (int i = 0; i < all_args.size(); i++)
     {
         cout << "arg: " << all_args[i] << endl;
     }
-    string chainName = all_args[0];
-    string logFile = all_args[1];
-    string nodeNumber = all_args[2];
+    //string chainName = all_args[0];
+    string logFile = all_args[0];
+    string nodeNumber = all_args[1];
 
     //connect
 
@@ -366,7 +367,7 @@ int main(int argc, char *argv[])
     cout << "Starting write now------------------------------------------------------------\n\n\n";
 
     ifstream infile(logFile);
-    cout << all_args[1] << " found file\n";
+    cout << all_args[0] << " found file\n";
     string curr;
     string key;
     string data = "";
