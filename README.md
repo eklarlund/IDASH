@@ -1,4 +1,3 @@
-# IDASH
 
 Virtual machine Setup
 
