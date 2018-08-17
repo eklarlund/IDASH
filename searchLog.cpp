@@ -1057,5 +1057,7 @@ int main(int argc, char *argv[])
     string result = searchChain(searchParams, datadir, nodeNum, activityMap, resourceMap);
     cout << "RESULT\n"
          << result << endl;
+    system("rm dat.txt");
     string writeCommand = "echo \"" + result + "\" > result.txt";
+    system(writeCommand.c_str());
 }

@@ -446,7 +446,7 @@ int main(int argc, char *argv[])
             data = "";
         }
     }
-
+    system("rm dat.txt");
     cout << "ACTIVITY MAP SIZE: " << activityMap.size() << endl;
 
     for (map<string, int>::iterator it = activityMap.begin(); it != activityMap.end(); it++)
