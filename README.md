@@ -17,7 +17,7 @@ Setting up the chains
        <3rd node IP> 	<4th node IP> 		<node number>”  
 Upload and Searching  
 
--To upload, run upload.cpp, with the log file and node number as inputs  
+-To upload, run upload.cpp, with the log file and node number as inputs. The result is printed to the screen, and written to the file results.txt.  
 	-run as “./upload  <log file>  <node number>”  
 	-example “./upload 	../Data/training1.txt 	1”  
 -To search, run searchLog.cpp, with the directory of the chain (which should be “node<node number>”, in the directory setup.sh was ran in) followed by the search parameters in the format “<field>=<value>” (for example user=10)  
