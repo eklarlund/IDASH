@@ -23,7 +23,7 @@ string currentPath = "/home/esben/Documents/simulator";
 string multichainPath = "/home/esben/Documents/Github/multichain/multichain/src";
 
 int updateMap(const string streamName, std::map<std::string, int> &activityMap, const string chainNum)
-{ //TODO finish
+{ 
     string newItem;
     int RPCPort = 100 * stoi(chainNum) + 4011;
     // if (chainName == "log1" || chainName == "log2" || chainName == "log3" || chainName == "log4")
@@ -73,7 +73,7 @@ int updateMap(const string streamName, std::map<std::string, int> &activityMap, 
 
     cout << "REPLY==========================\n\n\n"
          << command << endl;
-    std::system(command.c_str()); //TODO
+    std::system(command.c_str()); 
     ifstream datFile;
     datFile.open("dat.txt");
     string output;
@@ -191,7 +191,6 @@ int getStringNum(const string streamName, const string activity, std::map<std::s
     //     return -1;
     // }
     int activityNum;
-    //TODO finish
     if (activityMap.find(activity) == activityMap.end())
     { //did not find activity
         int updatedMap = updateMap(streamName, activityMap, chainNum);
@@ -209,7 +208,7 @@ int getStringNum(const string streamName, const string activity, std::map<std::s
 
         cout << "REPLY==========================\n\n"
              << command << endl;
-        std::system(command.c_str()); //TODO
+        std::system(command.c_str());
         updatedMap = updateMap(streamName, activityMap, chainNum);
         if (updatedMap == 0)
         {
@@ -281,7 +280,6 @@ int publishAuxBlock(const int type, const int val, const string data, const stri
         break;
     }
     cout << "AUX CHAIN " << auxChainName << endl;
-    //TODO change makeChain.sh path so that this can be called in other directories
     string makeChain = "\"" + currentPath + "/makeChain.sh\" " + auxChainName +
                        " node" + chainNum +
                        " " + to_string(RPCPort) +
