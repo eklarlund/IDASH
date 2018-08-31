@@ -402,9 +402,14 @@ string searchNodeID(const long targetID, const int estNum, const string chainNam
     return searchNodeID(targetID, newEstBlocks, chainName, RPCPort, datadir);
 }
 
-string searchNodeTime(const long targetTime, const int estNum, const string chainName, const int RPCPort, const string datadir)
+string searchNodeTime(const vector<long> targetTime, const int estNum, const string chainName, const int RPCPort, const string datadir)
 { //recursively search chain for specific ID
     cout << "searching with " << estNum << "blocks\n";
+    long target1 = targetTime[0];
+    long target2 = target1;
+    if(targetTime.size() > 1){
+        target2 = targetTime[1];
+    }
     readChain(chainName, RPCPort, datadir, estNum);
     int count = 0;
     string result = "";
@@ -429,7 +434,7 @@ string searchNodeTime(const long targetTime, const int estNum, const string chai
                 break;
             }
         }
-        if (stol(currTime) == targetTime)
+        if (stol(currTime) == target1)
         {
             result = result + curr + "\n";
         }
@@ -455,14 +460,14 @@ string searchNodeTime(const long targetTime, const int estNum, const string chai
                     break;
                 }
             }
-            if (targetTime == stol(currTime))
+            if (target1 == stol(currTime) || ( target1 < stol(currTime) && target2 >= stol(currTime)))
             {
-                cout << "found target " << targetTime << endl;
+                cout << "found target " << target1 << endl;
                 result = result + curr + "\n";
             }
-            else if (targetTime < stol(currTime))
+            else if (target2 < stol(currTime))
             {
-                cout << "target: " << targetTime << " curr " << currTime << endl;
+                cout << "target: " << target1 << " curr " << currTime << endl;
                 break;
             }
         }
@@ -471,18 +476,18 @@ string searchNodeTime(const long targetTime, const int estNum, const string chai
     cout << "first:" << firstTime << endl
          << "curr:" << currTime << endl
          << estNum << endl
-         << targetTime << endl;
-    if (result != "" && stol(firstTime) != targetTime)
+         << target1 << endl;
+    if (result != "" && stol(firstTime) != target1)
     {
         return result; //if result has been found, and is not the 1st time found (to ensure all duplicates are accounted for)
                        // then result is returned
     }
-    if (stol(firstTime) < targetTime)
+    if (stol(firstTime) < target1)
     { //returns nothing if the program has found blocks older than the target, but not the target
         cout << "first time:" << firstTime << "no matching time found\n";
         return "";
     }
-    int newEstBlocks = 100 + interpolateChangePerLog(stol(currTime), stol(firstTime), count, targetTime);
+    int newEstBlocks = 100 + interpolateChangePerLog(stol(currTime), stol(firstTime), count, target1);
     if (newEstBlocks <= estNum)
     { //returns nothing if whole chain is searched
         cout << "nothing more to find\n";
@@ -491,6 +496,8 @@ string searchNodeTime(const long targetTime, const int estNum, const string chai
     return searchNodeTime(targetTime, 5 + newEstBlocks, chainName, RPCPort, datadir);
     //newEstBlocks is incremented to ensure that duplicate times are all captured in the search
 }
+
+
 
 string getTime(const long targetTime, const int estNum, const string chainName, const int RPCPort, const string datadir)
 {
@@ -837,7 +844,24 @@ string searchChainNode(const vector<string> searchParams, const string datadir, 
         {
             searchedParams++;
             cout << "searching timestamp\n";
-            result = searchNodeTime(stol(searchParams[0]), 100, chainName, RPCPort, datadir);
+            vector <long> times;
+
+            //find out if timestamp is a range or not
+            if (searchParams[0].find('-') != std::string::npos){
+                cout << "TIME RANGE\n" <<  "'" << searchParams[0].substr(0, searchParams[0].find("-", 0)) <<"'\n'";
+
+                times.push_back(stol( searchParams[0].substr(0, searchParams[0].find("-", 0)) ));
+                cout << "TIME 1: " << times[0] << endl;
+                times.push_back( stol( searchParams[0].substr(searchParams[0].find("-", 0) + 1, searchParams[0] .size() - 1) ) );
+                cout << "TIME 2: " << times[1] << endl;
+
+            }
+            else{
+                times.push_back(stol(searchParams[0]));
+            }
+            
+
+            result = searchNodeTime(times, 100, chainName, RPCPort, datadir);
             if (result == "")
                 return result; //return if nothing found
         }
