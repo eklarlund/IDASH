@@ -434,7 +434,7 @@ string searchNodeTime(const vector<long> targetTime, const int estNum, const str
                 break;
             }
         }
-        if (stol(currTime) == target1)
+        if (stol(currTime) == target1 || (targetTime.size() > 1 && target1 < stol(currTime)))
         {
             result = result + curr + "\n";
         }
@@ -460,7 +460,7 @@ string searchNodeTime(const vector<long> targetTime, const int estNum, const str
                     break;
                 }
             }
-            if (target1 == stol(currTime) || ( target1 < stol(currTime) && target2 >= stol(currTime)))
+            if (target1 == stol(currTime) || ( target1 <= stol(currTime) && target2 >= stol(currTime)))
             {
                 cout << "found target " << target1 << endl;
                 result = result + curr + "\n";
@@ -499,150 +499,6 @@ string searchNodeTime(const vector<long> targetTime, const int estNum, const str
 
 
 
-string getTime(const long targetTime, const int estNum, const string chainName, const int RPCPort, const string datadir)
-{
-    readChain(chainName, RPCPort, datadir, estNum);
-    string result = "";
-    string curr;
-    ifstream datFile;
-    string currTime;
-    string firstTime = "";
-    datFile.open("dat.txt");
-    if (datFile.is_open())
-    {
-        getline(datFile, curr);
-        stringstream check1(curr);
-        string intermediate;
-        while (getline(check1, intermediate, 'a'))
-        {
-            if (intermediate == "")
-                continue;
-            currTime = intermediate;
-            cout << "currtime" << currTime << endl;
-            break;
-        }
-        firstTime = currTime;
-        if (stol(firstTime) == targetTime)
-        {
-            return curr;
-        }
-        cout << "1st time: " << firstTime << endl;
-
-        while (!(datFile.eof()))
-        {
-            getline(datFile, curr);
-            cout << curr << endl;
-            curr.erase(std::remove(curr.begin(), curr.end(), '\t'), curr.end());
-            if (curr == "")
-                break;
-            stringstream check1(curr);
-            string intermediate;
-            while (getline(check1, intermediate, 'a'))
-            {
-                if (intermediate == "")
-                    continue;
-                currTime = intermediate;
-                cout << "currtime" << currTime << endl;
-                break;
-            }
-            if (currTime.at(0) != '\"')
-            { //skip if not at timestamp
-                continue;
-            }
-            curr.erase(std::remove(curr.begin(), curr.end(), '\"'), curr.end());
-            if (targetTime == stol(currTime))
-            {
-                cout << "found target " << targetTime << endl;
-                result = result + curr + "\n";
-            }
-            else if (targetTime < stol(currTime))
-            {
-                cout << "target: " << targetTime << "curr " << currTime << endl;
-                if (result != "")
-                {
-                    return result;
-                }
-                break;
-            }
-        }
-        datFile.close();
-    }
-    cout << firstTime << endl
-         << currTime << endl
-         << estNum << endl
-         << targetTime << endl;
-    int newEstBlocks = 1.1 * interpolateChangePerLog(stol(firstTime), stol(currTime), estNum, targetTime);
-    if (stol(firstTime) > targetTime) //returns nothing if the prgram has found blocks older than the target, but not the target
-        return "";
-    return getTime(targetTime, newEstBlocks, chainName, RPCPort, datadir);
-}
-
-string searchTimeStamp(const long timeStamp, const string chainName, const int RPCPort, const string nodeNum, const string chainNum, const string datadir)
-{
-    readChain(chainName, RPCPort, datadir, 100);
-    cout << "read chain " << chainName << endl;
-    string result = "";
-    ifstream datFile;
-    string curr;
-    string time1 = "";
-    string time2 = "";
-    datFile.open("dat.txt");
-    int count = 0;
-    string currTime;
-    if (datFile.is_open())
-    {
-        while (!(datFile.eof()))
-        {
-            getline(datFile, curr);
-            curr.erase(std::remove(curr.begin(), curr.end(), '\t'), curr.end());
-            if (curr == "")
-                break;
-            stringstream check1(curr);
-            string intermediate;
-            while (getline(check1, intermediate, 'a'))
-            {
-                if (intermediate == "")
-                    continue;
-                else
-                {
-                    currTime = intermediate;
-                    currTime.erase(0, 1);
-                    break;
-                }
-            }
-            if (stol(currTime) == timeStamp)
-            {
-                result = result + curr + "\n";
-                //return curr;
-            }
-            if (count == 0)
-            {
-                time1 = currTime;
-                cout << "time1 " << time1 << endl;
-                time1.erase(std::remove(time1.begin(), time1.end(), ' '), time1.end());
-                if (time1 == "")
-                {
-                    return "";
-                }
-            }
-            else if (count == 100)
-            {
-                break;
-            }
-            count++;
-        }
-        datFile.close();
-    }
-    if (time1 == "")
-        return result; //return if no entries in chain
-    if (stol(time1) < timeStamp)
-        return result; //return if all times found
-    time2 = currTime;
-    cout << time1 << "   " << count << "   " << time2 << endl;
-    int estBlocks = 1.1 * interpolateChangePerLog(stol(time1), stol(time2), count, timeStamp);
-    cout << "starting search\n";
-    return getTime(timeStamp, estBlocks, chainName, RPCPort, datadir);
-}
 int REFIDnumToBin(int auxNum)
 {
     return 10 + int(pow(8, auxNum));
