@@ -799,7 +799,7 @@ vector<string> searchChainNode(const vector<string> searchParams, const string d
     }
 }
 
-long getParameterFromLine(string line)
+string getParameterFromLine(string line)
 {
     int wordStartPosition = 0;
     for (int i = 0; i < sortNum; i++)
@@ -807,7 +807,23 @@ long getParameterFromLine(string line)
     int wordEndPosition = line.find_first_of('\t', wordStartPosition + 1);
     std::string result = line.substr(wordStartPosition + 1, line.length() - wordEndPosition - 1);
     //std::cout << result << endl;
-    return stol(result);
+    return result;
+}
+
+bool compareParams(const string a, const string b)
+{
+    //find 1st parameter
+    if(sortNum < 5){
+        long paramA = stol(getParameterFromLine(a));
+        long paramB = stol(getParameterFromLine(b));
+        return paramA < paramB;
+    }
+    else{
+        string paramA = getParameterFromLine(a);
+        string paramB = getParameterFromLine(b);
+        return (paramA.compare(paramB) < 0);
+    }
+
 }
 
 vector<string> searchChain(vector<string> searchParams, const string datadir,
@@ -1007,25 +1023,18 @@ int main(int argc, char *argv[])
     {
         std::sort(result.begin(), result.end(),
                   [](const string a, const string b) {
-                      //find 1st parameter
-                      long paramA = getParameterFromLine(a);
-                      //cout << "Param 1: " << paramA << endl;
-                      long paramB = getParameterFromLine(b);
-                      return paramA < paramB;
+
+                      return compareParams(a, b);
                   });
     }
     else if (sortString == "DEC")
     {
         std::sort(result.begin(), result.end(),
                   [](const string a, const string b) {
-                      //find 1st parameter
-                      long paramA = getParameterFromLine(a);
-                      //cout << "Param 1: " << paramA << endl;
-                      long paramB = getParameterFromLine(b);
-                      return paramA > paramB;
+                      return ! compareParams(a, b);
                   });
     }
-
+    cout << "sortParam: " << sortNum << sortString << endl;
     string resultString = "";
     for (int i = 0; i < result.size(); i++)
     {
