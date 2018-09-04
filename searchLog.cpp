@@ -16,6 +16,7 @@ using namespace std;
 string currentPath = "/home/esben/Documents/simulator";
 string multichainPath = "/home/esben/Documents/Github/multichain/multichain/src";
 
+int sortNum = -1;
 string findChain(const string chainName, const int RPCPort, const string datadir, const string nodeNum)
 {
 
@@ -798,6 +799,17 @@ vector<string> searchChainNode(const vector<string> searchParams, const string d
     }
 }
 
+long getParameterFromLine(string line)
+{
+    int wordStartPosition = 0;
+    for (int i = 0; i < sortNum; i++)
+        wordStartPosition = line.find_first_of('\t', wordStartPosition + 1);
+    int wordEndPosition = line.find_first_of('\t', wordStartPosition + 1);
+    std::string result = line.substr(wordStartPosition + 1, line.length() - wordEndPosition - 1);
+    //std::cout << result << endl;
+    return stol(result);
+}
+
 vector<string> searchChain(vector<string> searchParams, const string datadir,
                            const string nodeNum, map<std::string, int> activityMap, map<std::string, int> resourceMap)
 { //complete search function
@@ -881,6 +893,8 @@ int main(int argc, char *argv[])
         cout << "arg: " << all_args[i] << endl;
     }
     string datadir = all_args[0];
+    //    int sortNum = -1;    // number of parameter to sort, 0 = timestamp, 1 = Node, 2 = ID, 3 REFID, 4 = User, 5 = activity, 6 = resource
+    string sortString;
     string nodeNum = getNodeNum(datadir);
     updateMap("activity", activityMap, nodeNum);
     updateMap("resource", resourceMap, nodeNum);
@@ -938,6 +952,49 @@ int main(int argc, char *argv[])
             else
                 cout << "Resource " << tokens[1] << " not found\n";
         }
+        else if (tokens[0] == "SORT")
+        { //0 = timestamp, 1 = Node, 2 = ID, 3 REFID, 4 = User, 5 = activity, 6 = resource
+            if (tokens[1].find('-') != std::string::npos)
+            {
+                sortString = tokens[1].substr(0, tokens[1].find("-", 0));
+                for (auto &c : sortString)
+                    c = toupper(c);
+                if (sortString == "TIMESTAMP")
+                {
+                    cout << "TIMESTAMP FOUND FOR SORT\n";
+                    sortNum = 0;
+                }
+                else if (sortString == "NODE")
+                {
+                    sortNum = 1;
+                }
+                else if (sortString == "ID")
+                {
+                    sortNum = 2;
+                }
+                else if (sortString == "REFID")
+                {
+                    sortNum = 3;
+                }
+                else if (sortString == "USER")
+                {
+                    sortNum = 4;
+                }
+                else if (sortString == "ACTIVITY")
+                {
+                    sortNum = 5;
+                }
+                else if (sortString == "RESOURCE")
+                {
+                    sortNum = 6;
+                }
+                cout << "SORT 1: " << sortNum << endl;
+                sortString = tokens[1].substr(tokens[1].find("-", 0) + 1, tokens[1].size() - 1);
+                for (auto &c : sortString)
+                    c = toupper(c);
+                cout << "SORT 2: " << sortString << endl;
+            }
+        }
     }
     // readChain("log" + nodeNum, stoi("4" + nodeNum + "0" + nodeNum), datadir, 999999);
     // string logs = longSearch(searchParams);
@@ -945,6 +1002,30 @@ int main(int argc, char *argv[])
     // string mim = searchTimeStamp(1522000019451, "log" + nodeNum, nodeNum, nodeNum, datadir);
     cout << "nodenum" << nodeNum << endl;
     vector<string> result = searchChain(searchParams, datadir, nodeNum, activityMap, resourceMap);
+
+    if (sortString == "ASC")
+    {
+        std::sort(result.begin(), result.end(),
+                  [](const string a, const string b) {
+                      //find 1st parameter
+                      long paramA = getParameterFromLine(a);
+                      //cout << "Param 1: " << paramA << endl;
+                      long paramB = getParameterFromLine(b);
+                      return paramA < paramB;
+                  });
+    }
+    else if (sortString == "DEC")
+    {
+        std::sort(result.begin(), result.end(),
+                  [](const string a, const string b) {
+                      //find 1st parameter
+                      long paramA = getParameterFromLine(a);
+                      //cout << "Param 1: " << paramA << endl;
+                      long paramB = getParameterFromLine(b);
+                      return paramA > paramB;
+                  });
+    }
+
     string resultString = "";
     for (int i = 0; i < result.size(); i++)
     {
