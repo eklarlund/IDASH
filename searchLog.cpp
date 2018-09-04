@@ -265,12 +265,12 @@ int updateMap(const string streamName, std::map<std::string, int> &activityMap, 
     return 0;
 }
 
-string longSearch(const vector<string> searchParams)
+vector<string> longSearch(const vector<string> searchParams)
 { //search dat.txt for matching entries line by line
     ifstream datFile;
     datFile.open("dat.txt");
     string curr;
-    string logs;
+    vector<string> result;
     vector<int> existingParams;
     for (int i = 0; i < searchParams.size(); i++)
     { //find existing params
@@ -303,12 +303,13 @@ string longSearch(const vector<string> searchParams)
             if (matchParams(existingParams, searchParams, tokens))
             {
                 cout << "Found thing: " << curr << endl;
-                logs = logs + curr + "\n";
+                result.push_back(curr);
+                //logs = logs + curr + "\n";
             }
         }
         datFile.close();
     }
-    return logs;
+    return result;
 }
 int interpolateChangePerLog(const long val1, const long val2, const long distance, const long target)
 {
@@ -319,12 +320,12 @@ int interpolateChangePerLog(const long val1, const long val2, const long distanc
     return (int)((val2 - target) / changePerLog);
 }
 
-string searchNodeID(const long targetID, const int estNum, const string chainName, const int RPCPort, const string datadir)
+vector<string> searchNodeID(const long targetID, const int estNum, const string chainName, const int RPCPort, const string datadir)
 { //recursively search chain for specific ID
     cout << "searching with " << estNum << "blocks\n";
     readChain(chainName, RPCPort, datadir, estNum);
     int count = 0;
-    string result = "";
+    vector<string> result;
     string curr;
     ifstream datFile;
     string currID;
@@ -348,7 +349,8 @@ string searchNodeID(const long targetID, const int estNum, const string chainNam
         firstID = currID;
         if (stol(currID) == targetID)
         {
-            return curr;
+            result.push_back(curr);
+            return result;
         }
         cout << "1st ID: " << firstID << endl;
 
@@ -374,7 +376,8 @@ string searchNodeID(const long targetID, const int estNum, const string chainNam
             if (targetID == stol(currID))
             {
                 cout << "found target ID " << targetID << endl;
-                return curr;
+                result.push_back(curr);
+                return result;
             }
             else if (targetID < stol(currID))
             {
@@ -391,28 +394,29 @@ string searchNodeID(const long targetID, const int estNum, const string chainNam
     if (stol(firstID) < targetID)
     { //returns nothing if the program has found blocks older than the target, but not the target
         cout << "nothing found\n";
-        return "";
+        return result;
     }
     int newEstBlocks = 100 + interpolateChangePerLog(stol(currID), stol(firstID), count, targetID);
     if (newEstBlocks <= estNum)
     { //returns nothing if whole chain is searched
         cout << "nothing more to find\n";
-        return "";
+        return result;
     }
     return searchNodeID(targetID, newEstBlocks, chainName, RPCPort, datadir);
 }
 
-string searchNodeTime(const vector<long> targetTime, const int estNum, const string chainName, const int RPCPort, const string datadir)
+vector<string> searchNodeTime(const vector<long> targetTime, const int estNum, const string chainName, const int RPCPort, const string datadir)
 { //recursively search chain for specific ID
     cout << "searching with " << estNum << "blocks\n";
     long target1 = targetTime[0];
     long target2 = target1;
-    if(targetTime.size() > 1){
+    if (targetTime.size() > 1)
+    {
         target2 = targetTime[1];
     }
     readChain(chainName, RPCPort, datadir, estNum);
     int count = 0;
-    string result = "";
+    vector<string> result;
     string curr;
     ifstream datFile;
     string currTime;
@@ -436,7 +440,8 @@ string searchNodeTime(const vector<long> targetTime, const int estNum, const str
         }
         if (stol(currTime) == target1 || (targetTime.size() > 1 && target1 < stol(currTime)))
         {
-            result = result + curr + "\n";
+            //result = result + curr + "\n";
+            result.push_back(curr);
         }
         firstTime = currTime;
         cout << "1st time: " << firstTime << endl;
@@ -460,10 +465,11 @@ string searchNodeTime(const vector<long> targetTime, const int estNum, const str
                     break;
                 }
             }
-            if (target1 == stol(currTime) || ( target1 <= stol(currTime) && target2 >= stol(currTime)))
+            if (target1 == stol(currTime) || (target1 <= stol(currTime) && target2 >= stol(currTime)))
             {
                 cout << "found target " << target1 << endl;
-                result = result + curr + "\n";
+                result.push_back(curr);
+                //result = result + curr + "\n";
             }
             else if (target2 < stol(currTime))
             {
@@ -477,7 +483,7 @@ string searchNodeTime(const vector<long> targetTime, const int estNum, const str
          << "curr:" << currTime << endl
          << estNum << endl
          << target1 << endl;
-    if (result != "" && stol(firstTime) != target1)
+    if (result.size() != 0 && stol(firstTime) != target1)
     {
         return result; //if result has been found, and is not the 1st time found (to ensure all duplicates are accounted for)
                        // then result is returned
@@ -485,7 +491,7 @@ string searchNodeTime(const vector<long> targetTime, const int estNum, const str
     if (stol(firstTime) < target1)
     { //returns nothing if the program has found blocks older than the target, but not the target
         cout << "first time:" << firstTime << "no matching time found\n";
-        return "";
+        return result;
     }
     int newEstBlocks = 100 + interpolateChangePerLog(stol(currTime), stol(firstTime), count, target1);
     if (newEstBlocks <= estNum)
@@ -496,8 +502,6 @@ string searchNodeTime(const vector<long> targetTime, const int estNum, const str
     return searchNodeTime(targetTime, 5 + newEstBlocks, chainName, RPCPort, datadir);
     //newEstBlocks is incremented to ensure that duplicate times are all captured in the search
 }
-
-
 
 int REFIDnumToBin(int auxNum)
 {
@@ -556,8 +560,8 @@ string getNodeNum(string datadir)
     return "ERROR";
 }
 
-string searchChainNode(const vector<string> searchParams, const string datadir, const string chainNum,
-                       const string nodeNum, map<std::string, int> activityMap, map<std::string, int> resourceMap)
+vector<string> searchChainNode(const vector<string> searchParams, const string datadir, const string chainNum,
+                               const string nodeNum, map<std::string, int> activityMap, map<std::string, int> resourceMap)
 { // searchChain, but for specific node's chain
     // nodeNum = computer's chainNum
     // chainNum = number of the chain being searched
@@ -687,53 +691,55 @@ string searchChainNode(const vector<string> searchParams, const string datadir, 
     }
     if (searchParams[2] != "" || searchParams[0] != "")
     {
-        string result;
+        vector<string> result;
         if (searchParams[2] != "")
         {
             //TODO seach by ID
             searchedParams++;
             result = searchNodeID(stol(searchParams[2]), 100, chainName, RPCPort, datadir);
-            if (result == "")
+            if (result.size() == 0)
                 return result; //return if nothing found
         }
         else if (searchParams[0] != "")
         {
             searchedParams++;
             cout << "searching timestamp\n";
-            vector <long> times;
+            vector<long> times;
 
             //find out if timestamp is a range or not
-            if (searchParams[0].find('-') != std::string::npos){
-                cout << "TIME RANGE\n" <<  "'" << searchParams[0].substr(0, searchParams[0].find("-", 0)) <<"'\n'";
+            if (searchParams[0].find('-') != std::string::npos)
+            {
+                cout << "TIME RANGE\n"
+                     << "'" << searchParams[0].substr(0, searchParams[0].find("-", 0)) << "'\n'";
 
-                times.push_back(stol( searchParams[0].substr(0, searchParams[0].find("-", 0)) ));
+                times.push_back(stol(searchParams[0].substr(0, searchParams[0].find("-", 0))));
                 cout << "TIME 1: " << times[0] << endl;
-                times.push_back( stol( searchParams[0].substr(searchParams[0].find("-", 0) + 1, searchParams[0] .size() - 1) ) );
+                times.push_back(stol(searchParams[0].substr(searchParams[0].find("-", 0) + 1, searchParams[0].size() - 1)));
                 cout << "TIME 2: " << times[1] << endl;
-
             }
-            else{
+            else
+            {
                 times.push_back(stol(searchParams[0]));
             }
-            
 
             result = searchNodeTime(times, 100, chainName, RPCPort, datadir);
-            if (result == "")
+            if (result.size() == 0)
                 return result; //return if nothing found
         }
         //match other parameters
         cout << numParams << " total and " << searchedParams << "complete\n";
-        string refinedResult = "";
-        vector<string> lines;
-        stringstream check0(result);
+        vector<string> refinedResult;
+        // vector<string> lines;
+        // stringstream check0(result);
         string line;
         if (numParams > searchedParams)
         {
             cout << "Aditional search parameters remaining\n";
-            result.erase(std::remove(result.begin(), result.end(), '\"'), result.end());
             //result with elements that dont match other parameters removed
-            while (getline(check0, line, '\n'))
+            for (int i = 0; i < result.size(); i++)
             {
+                line = result[i];
+                line.erase(std::remove(line.begin(), line.end(), '\"'), line.end());
                 vector<string> tokens;
                 stringstream check1(line);
                 string intermediate;
@@ -746,7 +752,8 @@ string searchChainNode(const vector<string> searchParams, const string datadir, 
                 }
                 if (matchParams(existingParams, searchParams, tokens))
                 {
-                    refinedResult = refinedResult + dataToText(line, activityMap, resourceMap) + "\n";
+                    refinedResult.push_back(dataToText(result[i], activityMap, resourceMap));
+                    // refinedResult = refinedResult + dataToText(line, activityMap, resourceMap) + "\n";
                 }
             }
             return refinedResult;
@@ -755,52 +762,55 @@ string searchChainNode(const vector<string> searchParams, const string datadir, 
         {
             cout << "done searching\n";
         }
-        while (getline(check0, line, '\n'))
+        for (int i = 0; i < result.size(); i++)
         {
-            vector<string> tokens;
-            stringstream check1(line);
-            string intermediate;
-            while (getline(check1, intermediate, 'a'))
-            {
-                if (intermediate == "")
-                    continue;
-                tokens.push_back(intermediate);
-                cout << "intermediate " << intermediate << endl;
-            }
-            refinedResult = refinedResult + dataToText(line, activityMap, resourceMap) + "\n";
+            line = result[i];
+            refinedResult.push_back(dataToText(line, activityMap, resourceMap));
         }
+        // while (getline(check0, line, '\n'))
+        // {
+        //     vector<string> tokens;
+        //     stringstream check1(line);
+        //     string intermediate;
+        //     while (getline(check1, intermediate, 'a'))
+        //     {
+        //         if (intermediate == "")
+        //             continue;
+        //         tokens.push_back(intermediate);
+        //         cout << "intermediate " << intermediate << endl;
+        //     }
+        //     refinedResult = refinedResult + dataToText(line, activityMap, resourceMap) + "\n";
+        // }
         return refinedResult;
     }
     else
     {
         check = readChain(chainName, RPCPort, datadir, 9999999);
-        string result = longSearch(searchParams);
+        vector<string> result = longSearch(searchParams);
 
-        string refinedResult = "";
-        vector<string> lines;
-        stringstream check0(result);
-        string line;
-        while (getline(check0, line, '\n'))
+        vector<string> refinedResult;
+        for (int i = 0; i < result.size(); i++)
         {
-            cout << "line: " << line << endl;
-            refinedResult = refinedResult + dataToText(line, activityMap, resourceMap) + "\n";
+            refinedResult.push_back(dataToText(result[i], activityMap, resourceMap));
         }
 
         return refinedResult;
     }
 }
 
-string searchChain(vector<string> searchParams, const string datadir,
-                   const string nodeNum, map<std::string, int> activityMap, map<std::string, int> resourceMap)
+vector<string> searchChain(vector<string> searchParams, const string datadir,
+                           const string nodeNum, map<std::string, int> activityMap, map<std::string, int> resourceMap)
 { //complete search function
-    string result;
+    vector<string> result;
     if (searchParams[1] == "")
     {
         for (int i = 1; i < 5; i++)
         {
             string chainNum = to_string(i);
             searchParams[1] = chainNum;
-            result = result + searchChainNode(searchParams, datadir, chainNum, nodeNum, activityMap, resourceMap);
+            vector<string> searchResult = searchChainNode(searchParams, datadir, chainNum, nodeNum, activityMap, resourceMap);
+            result.insert(result.end(), searchResult.begin(), searchResult.end());
+            //result = result + searchChainNode(searchParams, datadir, chainNum, nodeNum, activityMap, resourceMap);
         }
     }
     else
@@ -934,10 +944,15 @@ int main(int argc, char *argv[])
     // cout << logs << endl;
     // string mim = searchTimeStamp(1522000019451, "log" + nodeNum, nodeNum, nodeNum, datadir);
     cout << "nodenum" << nodeNum << endl;
-    string result = searchChain(searchParams, datadir, nodeNum, activityMap, resourceMap);
+    vector<string> result = searchChain(searchParams, datadir, nodeNum, activityMap, resourceMap);
+    string resultString = "";
+    for (int i = 0; i < result.size(); i++)
+    {
+        resultString = resultString + result[i] + "\n";
+    }
     cout << "RESULT\n"
-         << result << endl;
+         << resultString << endl;
     system("rm dat.txt");
-    string writeCommand = "echo \"" + result + "\" > result.txt";
+    string writeCommand = "echo \"" + resultString + "\" > result.txt";
     system(writeCommand.c_str());
 }
