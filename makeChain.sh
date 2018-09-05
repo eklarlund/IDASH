@@ -63,13 +63,19 @@ do
     sleep 1
 done
 
+auxResponse=
 echo $ADD_TO_LIST
 if ! [ -z ${ADD_TO_LIST} ]
 then
     NODE_NUMBER="${NODE_BIN: -1}"
-    ${CLI_COM} "aux" -rpcport=4${NODE_NUMBER}11 -datadir=${NODE_BIN} subscribe stream1
-    echo     ${CLI_COM} "aux" -rpcport=4${NODE_NUMBER}11 -datadir=${NODE_BIN} publish stream1 "${1}@${NODE_IP}:${PORT}" 00
-    ${CLI_COM} "aux" -rpcport=4${NODE_NUMBER}11 -datadir=${NODE_BIN} publish stream1 "${1}@${NODE_IP}:${PORT}" 00
+    while [ -z $auxResponse ]
+    do
+        auxResponse=$( ${CLI_COM} "aux" -rpcport=4${NODE_NUMBER}11 -datadir=${NODE_BIN} liststreams | grep "stream1" )
+        echo "auxResponse ${auxResponse}"
+        ${CLI_COM} "aux" -rpcport=4${NODE_NUMBER}11 -datadir=${NODE_BIN} subscribe stream1
+        echo     ${CLI_COM} "aux" -rpcport=4${NODE_NUMBER}11 -datadir=${NODE_BIN} publish stream1 "${1}@${NODE_IP}:${PORT}" 00
+        ${CLI_COM} "aux" -rpcport=4${NODE_NUMBER}11 -datadir=${NODE_BIN} publish stream1 "${1}@${NODE_IP}:${PORT}" 00
+    done
 fi
 $CLI_COM ${1} -datadir=$NODE_BIN subscribe stream1 # ensure that stream was subscribed
 exit 0
