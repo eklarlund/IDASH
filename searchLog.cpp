@@ -45,6 +45,7 @@ string findChain(const string chainName, const int RPCPort, const string datadir
                 curr.erase(std::remove(curr.begin(), curr.end(), '\t'), curr.end());
                 curr.erase(std::remove(curr.begin(), curr.end(), ' '), curr.end());
                 curr.erase(std::remove(curr.begin(), curr.end(), '\"'), curr.end());
+                curr.erase(std::remove(curr.begin(), curr.end(), ','), curr.end());
                 chain = curr;
                 cout << "CHAIN: " << chainName << " found\n";
                 break;
@@ -63,6 +64,9 @@ string findChain(const string chainName, const int RPCPort, const string datadir
             tokens.push_back(intermediate);
         }
         chain = tokens[1];
+        for(int i = 2; i < tokens.size(); i++){
+            chain = chain + ":" + tokens[i];
+        }
     }
     return chain;
 }
