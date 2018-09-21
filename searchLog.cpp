@@ -27,7 +27,7 @@ string findChain(const string chainName, const int RPCPort, const string datadir
     system(connectCommand.c_str()); //ensure that node is subscribed to stream
     string command = "\"" + multichainPath + "/multichain-cli\" aux" +
                      " -datadir=\"" + datadir +
-                     "\" -rpcport=\"" + to_string(auxRPCPort) + "\" liststreamitems stream1 false 9999999" + " | grep " + chainName + " > dat.txt";
+                     "\" -rpcport=\"" + to_string(auxRPCPort) + "\" liststreamitems stream1 false 9999999" + " | grep " + chainName + "@ > dat.txt";
     system(command.c_str()); //find if chain exists
 
     string curr;
@@ -1049,4 +1049,5 @@ int main(int argc, char *argv[])
     system("rm dat.txt");
     string writeCommand = "echo \"" + resultString + "\" > result.txt";
     system(writeCommand.c_str());
+    cout << "size: " << result.size() << endl;
 }
